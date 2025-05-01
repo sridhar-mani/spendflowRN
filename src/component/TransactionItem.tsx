@@ -30,8 +30,8 @@ const TransactionItem = ({item, onEdit = null, onDelete = null}) => {
 
   return (
     <Card style={tw`mb-3 rounded-lg`}>
-      <Card.Content>
-        <View style={tw`flex-row justify-between items-center`}>
+      <Card.Content style={tw`mt-0 p-3`}>
+        <View style={tw`flex-row  justify-between items-center`}>
           <View style={tw`flex-1`}>
             <Text style={tw`text-base font-bold`}>{item.description}</Text>
             <Text style={tw`text-xs text-gray-500`}>

@@ -1,15 +1,29 @@
+import React from 'react';
+import HomeScreen from '../screens/HomeScreen';
+import HistoryScreen from '../screens/HistoryScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+
 const navigations = [
   {
     key: 'home',
     title: 'Home',
     focusedIcon: 'home',
     unfocusedIcon: 'home-outline',
+    component: HomeScreen,
   },
   {
     key: 'history',
     title: 'History',
-    focusedIcon: 'logo-buffer',
-    unfocusedIcon: 'logo-buffer',
+    focusedIcon: 'book',
+    unfocusedIcon: 'book-outline',
+    component: HistoryScreen,
+  },
+  {
+    key: 'settings',
+    title: 'Settings',
+    focusedIcon: 'settings',
+    unfocusedIcon: 'settings-outline',
+    component: SettingsScreen,
   },
 ];
 

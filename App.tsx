@@ -8,12 +8,10 @@ import {
   Provider as PaperProvider,
   MD3LightTheme,
   Portal,
-} from 'react-native-paper';
+} from 'react-native-paper';  
 //@ts-ignore
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import HomeScreen from './src/screens/HomeScreen';
-import HistoryScreen from './src/screens/HistoryScreen';
 import {navigations} from './src/constants';
 
 const Tab = createBottomTabNavigator();
@@ -59,7 +57,7 @@ export default function App() {
                 <Tab.Screen
                   key={nav.key}
                   name={nav.key} // must match navigations[].key
-                  component={nav.key === 'home' ? HomeScreen : HistoryScreen}
+                  component={nav.component}
                 />
               ))}
             </Tab.Navigator>

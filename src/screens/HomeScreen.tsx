@@ -1,5 +1,5 @@
 // HomeScreen.tsx
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
   View,
   ScrollView,
@@ -49,6 +49,7 @@ export default function HomeScreen() {
     console.log(recTrans, transactionHistory);
     recTransacts();
   }, []);
+
 
   return (
     <SafeAreaView
