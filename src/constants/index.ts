@@ -93,13 +93,7 @@ const investmentCategories = [
 
 const transferCategories = ['transfer', 'other'];
 
-// Define transaction types
-const transactionTypes = {
-  EXPENSE: 'expense',
-  INCOME: 'income',
-  TRANSFER: 'transfer',
-  INVESTMENT: 'investment',
-};
+
 
 export {
   navigations,
@@ -107,6 +101,5 @@ export {
   expenseCategories,
   incomeCategories,
   investmentCategories,
-  transactionTypes,
   transferCategories,
 };

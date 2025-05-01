@@ -3,11 +3,13 @@ import {
   expenseCategories,
   incomeCategories,
   investmentCategories,
-  transactionTypes,
   transferCategories,
 } from '../constants';
 import {persist, createJSONStorage} from 'zustand/middleware';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {transactionTypes} from '../constants/transactionTypes';
+
 
 // Create store with persistence
 const useStore = create(
