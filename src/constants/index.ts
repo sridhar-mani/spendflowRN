@@ -101,7 +101,20 @@ const investmentCategories = [
 
 const transferCategories = ['transfer', 'other'];
 
-
+const months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 export {
   navigations,
@@ -109,5 +122,5 @@ export {
   expenseCategories,
   incomeCategories,
   investmentCategories,
-  transferCategories,
+  transferCategories,months
 };

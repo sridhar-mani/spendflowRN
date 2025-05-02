@@ -3,10 +3,11 @@ module.exports = {
   plugins: [
     '@babel/plugin-syntax-import-meta',
     'babel-plugin-transform-import-meta',
+    'react-native-reanimated/plugin',
   ],
   env: {
     production: {
-      plugins: ['react-native-paper/babel'],
+      plugins: ['react-native-paper/babel', 'react-native-reanimated/plugin'],
     },
   },
 };

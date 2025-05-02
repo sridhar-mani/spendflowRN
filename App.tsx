@@ -11,6 +11,7 @@ import {
 } from 'react-native-paper';  
 //@ts-ignore
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import 'react-native-reanimated';
 
 import {navigations} from './src/constants';
 
