@@ -44,6 +44,9 @@ const AnalyticsScreen = () => {
         style={tailwind`p-4 pl-6 text-2xl border-b border-gray-200 shadow-sm font-bold`}>
         Analytics
       </Text>
+
+
+
       <BarChart data={DATA} />
 
       <ScrollView>
