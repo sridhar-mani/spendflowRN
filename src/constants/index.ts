@@ -2,6 +2,7 @@ import React from 'react';
 import HomeScreen from '../screens/HomeScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import AnalyticsScreen from '../screens/AnalyticsScreen';
 
 const navigations = [
   {
@@ -17,6 +18,13 @@ const navigations = [
     focusedIcon: 'book',
     unfocusedIcon: 'book-outline',
     component: HistoryScreen,
+  },
+  {
+    key: 'analytics',
+    title: 'Analytics',
+    focusedIcon: 'bar-chart',
+    unfocusedIcon: 'bar-chart-outline',
+    component: AnalyticsScreen,
   },
   {
     key: 'settings',
