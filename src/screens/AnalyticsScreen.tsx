@@ -2,16 +2,16 @@ import {View} from 'react-native';
 import {Text} from 'react-native-ui-lib';
 import React from 'react';
 import tailwind from 'twrnc';
-import {CartesianChart, Line} from 'victory-native';
 import {months} from '../constants';
+import {BarChart} from 'react-native-gifted-charts';
 import useStore from '../store';
-import {getMonth, getYear, parseISO} from 'date-fns';
+import {getMonth, parseISO} from 'date-fns';
 
 const AnalyticsScreen = () => {
   const {transactionHistory} = useStore();
   const DATA = months.map((mon, ind) => ({
-    month: mon,
-    expense: transactionHistory
+    label: mon,
+    value: transactionHistory
       .filter(
         txn =>
           getMonth(parseISO(txn.date)) === ind + 1 &&
@@ -33,11 +33,7 @@ const AnalyticsScreen = () => {
         style={tailwind`p-4 pl-6 text-2xl border-b border-gray-200 shadow-sm font-bold`}>
         Analytics
       </Text>
-      <CartesianChart data={DATA} xKey={'month'} yKeys={['expense', 'income']}>
-        {({points}) => (
-          <Line points={points.expense} color={'red'} strokeWidth={3}></Line>
-        )}
-      </CartesianChart>
+      <BarChart data={DATA} />
     </View>
   );
 };
