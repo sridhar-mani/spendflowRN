@@ -12,7 +12,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {FAB, Surface} from 'react-native-paper';
 import tw from 'twrnc';
 import CardCus from '../component/CardCus';
-import {homeButsTop} from '../constants';
+import {homeButsTop, incomeCategories} from '../constants';
 import TransactionModal from '../component/TransactionModel';
 import useStore from '../store';
 import TransactionItem from '../component/TransactionItem';
@@ -22,6 +22,12 @@ export default function HomeScreen() {
   const [recTrans, setRecTrans] = useState([]);
   const {addTransactionToHistory, transactionHistory, deleteTransaction} =
     useStore();
+
+    console.log( transactionHistory
+      .filter(txn => txn.category.toLowerCase() === 'expense')
+      .reduce((sum, txn) => sum + parseFloat(txn.amount), 0), transactionHistory
+      .filter(txn => txn.category.toLowerCase() === 'income')
+      .reduce((sum, txn) => sum + parseFloat(txn.amount), 0));
 
   // Calculate additional padding for Android status bar
   const statusBarHeight =
@@ -46,7 +52,6 @@ export default function HomeScreen() {
           .slice(0, 5),
       );
     };
-    console.log(recTrans, transactionHistory);
     recTransacts();
   }, []);
 

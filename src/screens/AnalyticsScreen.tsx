@@ -37,7 +37,7 @@ const AnalyticsScreen = () => {
     });
   }
 
-  console.log(DATA);
+
   return (
     <SafeAreaView style={tailwind`bg-gray-50 flex-1`}>
       <Text
@@ -47,31 +47,45 @@ const AnalyticsScreen = () => {
 
 
 
-      <BarChart data={DATA} />
+      {transactionHistory.length>0 &&<BarChart data={DATA}/>}
 
-      <ScrollView>
-        <RadarChart
+      {transactionHistory.length>0 &&<ScrollView>
+       { transactionHistory.filter(
+          txn =>
+            txn.type.toLowerCase() === 'expense',
+        ).reduce((sum, txn) => sum + parseFloat(txn.amount), 0) === 0 && <RadarChart
           hideAsterLines
           hideGrid
           data={incomeCategories.map(each =>
             transactionHistory
               .filter(txn => txn.category.toLowerCase() === each)
-              .reduce((sum, txn) => sum + parseFloat(txn.amount), 0),
+              .reduce((sum, txn) => sum + parseFloat(txn.amount), 0) || 0
           )}
           labels={incomeCategories}
-        />
-        <RadarChart
+          
+        />}
+        {transactionHistory
+        .filter(
+          txn =>
+            txn.type.toLowerCase() === 'income',
+        )
+        .reduce((sum, txn) => sum + parseFloat(txn.amount), 0) === 0 && <RadarChart
           hideAsterLines
           hideGrid
           data={expenseCategories.map(each =>
             transactionHistory
               .filter(txn => txn.category.toLowerCase() === each)
-              .reduce((sum, txn) => sum + parseFloat(txn.amount), 0),
+              .reduce((sum, txn) => sum + parseFloat(txn.amount), 0) || 0
           )}
           labels={expenseCategories}
-        />
-      </ScrollView>
-    </SafeAreaView>
+        />}
+      </ScrollView>}
+{transactionHistory.length === 0 &&      <View centerV centerH style={tailwind`flex-1`}>
+<Text  text40BL>
+  No Transactions
+</Text>
+      </View>}
+  </SafeAreaView>
   );
 };
 
