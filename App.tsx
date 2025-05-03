@@ -22,7 +22,7 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
-        <PaperProvider theme={MD3LightTheme}>
+        <PaperProvider theme={{...MD3LightTheme}}>
           <Portal.Host>
             <NavigationContainer>
               <Tab.Navigator
