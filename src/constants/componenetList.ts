@@ -18,20 +18,20 @@ const navigations = [
     unfocusedIcon: 'book-outline',
     component: HistoryScreen,
   },
-  {
-    key: 'analytics',
-    title: 'Analytics',
-    focusedIcon: 'bar-chart',
-    unfocusedIcon: 'bar-chart-outline',
-    component: AnalyticsScreen,
-  },
-  {
-    key: 'settings',
-    title: 'Settings',
-    focusedIcon: 'settings',
-    unfocusedIcon: 'settings-outline',
-    component: SettingsScreen,
-  },
+  // {
+  //   key: 'analytics',
+  //   title: 'Analytics',
+  //   focusedIcon: 'bar-chart',
+  //   unfocusedIcon: 'bar-chart-outline',
+  //   component: AnalyticsScreen,
+  // },
+  // {
+  //   key: 'settings',
+  //   title: 'Settings',
+  //   focusedIcon: 'settings',
+  //   unfocusedIcon: 'settings-outline',
+  //   component: SettingsScreen,
+  // },
 ];
 
 export {navigations};
