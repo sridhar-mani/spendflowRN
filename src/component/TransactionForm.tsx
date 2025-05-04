@@ -100,11 +100,9 @@ export default function AddTransactionForm({
   };
 
   const txnEdit = useMemo(() => {
-    console.log(txn);
+
     return transactionHistory.find(each => each.id === txn);
   }, [txn, transactionHistory]);
-
-  console.log(txnEdit);
 
   return (
     <View style={tw`bg-white rounded-lg`}>

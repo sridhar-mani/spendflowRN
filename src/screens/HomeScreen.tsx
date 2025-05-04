@@ -24,12 +24,6 @@ export default function HomeScreen() {
   const {addTransactionToHistory, transactionHistory, deleteTransaction} =
     useStore();
 
-    console.log( transactionHistory
-      .filter(txn => txn.category.toLowerCase() === 'expense')
-      .reduce((sum, txn) => sum + parseFloat(txn.amount), 0), transactionHistory
-      .filter(txn => txn.category.toLowerCase() === 'income')
-      .reduce((sum, txn) => sum + parseFloat(txn.amount), 0));
-
   // Calculate additional padding for Android status bar
   const statusBarHeight =
     Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
@@ -38,7 +32,6 @@ export default function HomeScreen() {
   const hideDialog = () => setDialogVisible(false);
 
   const handleTransactionSubmit = data => {
-    console.log('Transaction data:', data);
     addTransactionToHistory(data);
     // Process transaction data here (e.g., save to database)
   };

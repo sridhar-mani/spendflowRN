@@ -24,13 +24,20 @@ const Tab = createBottomTabNavigator();
 
 export default function App() {
 
-  const notifeePerm = checkNotifeePer();
+  
+  useEffect(() => {
+    const requestPermission = async () => {
+      const notifeePerm = await checkNotifeePer();
+      if(( notifeePerm ==='denied' ||  notifeePerm ==='unknown')){
+        RNAndroidNotificationListener.requestPermission();
+        startForegroundService();
+      }
+    };
+    requestPermission();
+  }, []);
 
   
-  if(( notifeePerm ==='denied' ||  notifeePerm ==='unknown')){
-    RNAndroidNotificationListener.requestPermission();
-    startForegroundService();
-  }
+
     
   return (
     <GestureHandlerRootView style={{flex: 1}}>

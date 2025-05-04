@@ -1,8 +1,6 @@
-const bankTempConvertor = (msg) => {
-    console.log("Notification inside the reader:\n", msg.notification);
+ const bankTempConvertor =async (msg) => {
   
     const { bigText = "", text = "" } = JSON.parse(msg.notification);
-    console.log("Text from inside the reader:\n", bigText, text);
   
     let bankAcc = text.match(/X+(\d{4})/i) || bigText.match(/X+(\d{4})/i);
     let typeMatch = text.match(/\b(credited|debited)\b/i) || bigText.match(/\b(credited|debited)\b/i);
