@@ -16,6 +16,7 @@ import {homeButsTop, incomeCategories} from '../constants';
 import TransactionModal from '../component/TransactionModel';
 import useStore from '../store';
 import TransactionItem from '../component/TransactionItem';
+import {MotiView} from 'moti';
 
 export default function HomeScreen() {
   const [dialogVisible, setDialogVisible] = useState(false);
@@ -58,12 +59,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView
-      style={tw`flex-1 bg-gray-100`}
-      edges={['top', 'left', 'right']}>
+      style={tw`flex-1 bg-gray-100 `}>
       <View
         style={[
-          tw`flex-1 relative`,
-          {paddingTop: Platform.OS === 'android' ? statusBarHeight : 0},
+          tw`flex-1 relative `,
+      
         ]}>
         <Surface elevation={1} style={tw`p-3 m-3 bg-white  rounded-2xl`}>
           <View style={tw`flex-row flex-wrap mb-1 -mx-2`}>
@@ -105,7 +105,8 @@ export default function HomeScreen() {
         <FAB
           icon="plus"
           onPress={showDialog}
-          style={tw`absolute bottom-4 right-4 bg-purple-300`}
+          color='black'
+          style={tw`absolute bottom-4 right-4 text-re bg-gray-100 shadow-lg`}
         />
 
         {/* Transaction Dialog Modal */}

@@ -12,12 +12,12 @@ export default function CardCus({
 }) {
   return (
     <Card style={tw`rounded-xl w-full  overflow-hidden`}>
-      <Card.Content style={tw`flex-row items-center p-3`}>
+      <Card.Content style={tw`flex-row items-center p-0`}>
         {/* Icon on the left */}
         <Avatar.Icon
           size={56}
           icon={icon}
-          style={tw`bg-transparent ${iconStyle}`}
+          style={tw`bg-transparent  ${iconStyle}`}
           color={iconCol}
         />
 

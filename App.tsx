@@ -1,45 +1,56 @@
 // App.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {CommonActions, NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {
   BottomNavigation,
-  Provider as PaperProvider,
   MD3LightTheme,
+  Provider as PaperProvider,
   Portal,
-} from 'react-native-paper';  
+} from 'react-native-paper';
+
 //@ts-ignore
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import 'react-native-reanimated';
-
+import {colorPalette} from './src/constants/colorTheme';
 import {navigations} from './src/constants/componenetList';
+import RNAndroidNotificationListener  from 'react-native-notification-listener';
+import { startForegroundService } from './src/background/notificationService';
+import { checkNotifeePer } from './src/utils/utils';
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+
+  const notifeePerm = checkNotifeePer();
+
+  
+  if(( notifeePerm ==='denied' ||  notifeePerm ==='unknown')){
+    RNAndroidNotificationListener.requestPermission();
+    startForegroundService();
+  }
+    
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
-        <PaperProvider theme={{...MD3LightTheme}}>
+        <PaperProvider theme={{...colorPalette.light}}>
           <Portal.Host>
             <NavigationContainer>
               <Tab.Navigator
                 initialRouteName="home"
                 screenOptions={{headerShown: false}}
                 tabBar={({navigation, state, descriptors, insets}) => {
-                  // 1️⃣ Build a Paper‐friendly state using your `navigations`:
                   const paperState = {
                     index: state.index,
-                    routes: navigations, // <-- your array, with title/focusedIcon/etc
+                    routes: navigations, 
                   };
 
                   return (
                     <BottomNavigation.Bar
                       navigationState={paperState}
                       safeAreaInsets={insets}
-                      // 2️⃣ Render the correct icon per route:
                       renderIcon={({route, focused, color}) => (
                         <Ionicons
                           name={
@@ -49,9 +60,7 @@ export default function App() {
                           color={color}
                         />
                       )}
-                      // 3️⃣ Show the label:
                       getLabelText={({route}) => route.title}
-                      // 4️⃣ When Paper’s pill is tapped, tell RN-Nav to switch tabs:
                       onTabPress={({route}) =>
                         navigation.dispatch(CommonActions.navigate(route.key))
                       }
@@ -61,7 +70,7 @@ export default function App() {
                 {navigations.map(nav => (
                   <Tab.Screen
                     key={nav.key}
-                    name={nav.key} // must match navigations[].key
+                    name={nav.key} 
                     component={nav.component}
                   />
                 ))}
