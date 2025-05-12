@@ -37,6 +37,13 @@ const useStore = create(
         transfer: transferCategories,
       },
 
+      settings: {
+        savings: 0,
+        invests: 0,
+        savingsGoal: 0,
+      },
+      setSettings: settings => set({settings}),
+
       // All transaction tags
       tags: [],
 

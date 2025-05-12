@@ -1,5 +1,5 @@
 import {View} from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import tailwind from 'twrnc';
 import {
@@ -9,22 +9,31 @@ import {
   Chip,
   Divider,
   Searchbar,
-  Button,
   Menu,
   Avatar,
-  Checkbox,
 } from 'react-native-paper';
-import {Slider, TextField} from 'react-native-ui-lib';
+
+import {
+  Checkbox,
+  Button,
+  NumberInput,
+  Slider,
+  TextField,
+  ButtonSize,
+} from 'react-native-ui-lib';
+import {ScrollView} from 'react-native-gesture-handler';
+import useStore from '../store';
 
 const SettingsScreen = () => {
-  const [settings, setSettings] = useState({
-    savings: 0,
-    invests: 0,
-    savingsGoal: 0,
-    expenseAlert: false,
-  });
+  const {settings, setSettings} = useStore();
+  const [localSettings, setLocalSettings] = useState(settings);
+  const [showMenu, setShowMenu] = useState(false);
+  useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
+  console.log(settings);
 
-  const optionsEn = settings.expenseAlert ? tailwind`opacity-50` : '';
+  const optionsEn = !showMenu ? tailwind`opacity-50` : '';
 
   return (
     <SafeAreaView style={tailwind`flex-1 bg-gray-50`}>
@@ -33,88 +42,89 @@ const SettingsScreen = () => {
           style={tailwind`text-2xl font-bold p-4  border-b border-gray-200 shadow-sm`}>
           Settings
         </Text>
-        <View
-          style={tailwind` flex-row items-center justify-between h-20 p-3 px-15`}>
-          <Text style={tailwind`text-xl font-bold`}>Enable Expense Alert</Text>
-          <Checkbox
-            status={settings.expenseAlert ? 'checked' : 'unchecked'}
-            onPress={() =>
-              setSettings({...settings, expenseAlert: !settings.expenseAlert})
-            }></Checkbox>
-        </View>
-        <View style={[tailwind`flex-col h-20 `, optionsEn]}>
+
+        <ScrollView style={[tailwind`flex-col h-20 `, optionsEn]}>
           <View
-            style={tailwind` flex-row items-center justify-between  p-3 px-15`}>
+            style={tailwind` flex-row items-center justify-between h-20 p-3 px-15`}>
+            <Text style={tailwind`text-xl font-bold`}>
+              Enable Expense Alert
+            </Text>
+            <Checkbox value={showMenu} onValueChange={setShowMenu}></Checkbox>
+          </View>
+          <View style={tailwind` flex items-start justify-between  p-3 px-15`}>
             <Text style={tailwind`text-xl font-bold`}>
               Target Savings % (Per Month)
             </Text>
             <TextField
-              editable={!settings.expenseAlert}
-              onChange={value =>
-                setSettings({...settings, savings: Number(value)})
-              }
-              style={tailwind`w-20 h-10 text-xl font-bold text-center`}
-              fieldStyle={tailwind`border-b   border-black w-20`}
-              enableErrors
+              label="Target Savings %"
               keyboardType="numeric"
               maxLength={3}
-              validate={[
-                'number',
-                value => Number(value) >= 0 && Number(value) <= 100,
-              ]}
-              validationMessage={[
-                'Must be a number',
-                'Must be between 0-100 ',
-              ]}></TextField>
+              floatingPlaceholder
+              value={String(localSettings.savings)}
+              onChangeText={text => {
+                const digits = text.replace(/[^0-9]/g, '');
+                const num = Math.max(0, Number(digits));
+                setLocalSettings({...localSettings, savings: num});
+              }}
+              validateOnChange={true}
+              style={tailwind`text-xl font-bold text-center text-gray-800`}
+              fieldStyle={tailwind`border-b border-gray-400 w-full pb-1`}
+              validate={['number', v => Number(v) >= 0 && Number(v) <= 100]}
+              validationMessage={['Must be a number', 'Must be between 0–100']}
+            />
           </View>
-        </View>
-        <View style={[tailwind`flex-col h-20 `, optionsEn]}>
-          <View
-            style={tailwind` flex-row items-center justify-between  p-3 px-15`}>
+          <View style={tailwind` flex items-start justify-between  p-3 px-15`}>
             <Text style={tailwind`text-xl font-bold`}>
               Target Investment % (Per Month)
             </Text>
             <TextField
-              onChange={value =>
-                setSettings({...settings, invests: Number(value)})
-              }
-              editable={!settings.expenseAlert}
-              style={tailwind`w-20 h-10 text-xl font-bold text-center`}
-              fieldStyle={tailwind`border-b   border-black w-20`}
-              enableErrors
-              maxLength={3}
+              label="Target Investment %"
               keyboardType="numeric"
-              validate={[
-                'number',
-                value => Number(value) >= 0 && Number(value) <= 100,
-              ]}
-              validationMessage={[
-                'Must be a number',
-                'Must be between 0-100 ',
-              ]}></TextField>
+              maxLength={3}
+              floatingPlaceholder
+              value={String(localSettings.invests)}
+              onChangeText={text => {
+                const digits = text.replace(/[^0-9]/g, '');
+                const num = Math.min(100, Math.max(0, Number(digits)));
+
+                setLocalSettings({...localSettings, invests: num});
+              }}
+              validateOnChange={true}
+              style={tailwind`text-xl font-bold text-center text-gray-800`}
+              fieldStyle={tailwind`border-b border-gray-400 w-full pb-1`}
+              validate={['number', v => Number(v) >= 0 && Number(v) <= 100]}
+              validationMessage={['Must be a number', 'Must be between 0–100']}
+            />
           </View>
-        </View>
-        <View style={[tailwind`flex-col h-20 `, optionsEn]}>
-          <View
-            style={tailwind` flex-row items-center justify-between  p-3 px-15`}>
+          <View style={tailwind` flex items-start justify-between  p-3 px-15`}>
             <Text style={tailwind`text-xl font-bold`}>Savings Goal</Text>
             <TextField
-              editable={!settings.expenseAlert}
-              onChange={value =>
-                setSettings({...settings, savingsGoal: Number(value)})
-              }
-              style={tailwind`w-20 h-10 text-xl font-bold text-center`}
-              fieldStyle={tailwind`border-b   border-black w-20`}
-              enableErrors
+              label="Savings Goal"
               keyboardType="numeric"
-              maxLength={10}
-              validate={[
-                'number',
-                value => Number(value) >= 0 && Number(value) <= 1000000000,
-              ]}
-              validationMessage={['Must be a number', '']}></TextField>
+              maxLength={30}
+              floatingPlaceholder
+              value={String(localSettings.savingsGoal)}
+              onChangeText={text => {
+                const digits = text.replace(/[^0-9]/g, '');
+                const num = Math.max(0, Number(digits));
+                setLocalSettings({...localSettings, savingsGoal: num});
+              }}
+              style={tailwind`text-xl font-bold text-center text-gray-800`}
+              fieldStyle={tailwind`border-b border-gray-400 w-full pb-1`}
+              validationMessage={['Must be a number', 'Must be between 0–100']}
+            />
           </View>
-        </View>
+          <Button
+            label={'Save'}
+            size={Button.sizes.medium}
+            disabled={!showMenu}
+            style={{
+              height: 50,
+              width: '50%',
+              alignSelf: 'center',
+              margin: 20,
+            }}></Button>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
