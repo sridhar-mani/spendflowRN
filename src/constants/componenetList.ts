@@ -2,6 +2,7 @@ import HomeScreen from '../screens/HomeScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
+import CameraScreen from '../screens/CameraScreen';
 
 const navigations = [
   {
@@ -32,6 +33,13 @@ const navigations = [
   //   unfocusedIcon: 'settings-outline',
   //   component: SettingsScreen,
   // },
+  {
+    key: 'camera',
+    title: 'Camera',
+    focusedIcon: 'camera',
+    unfocusedIcon: 'camera-outline',
+    component: CameraScreen,
+  },
 ];
 
 export {navigations};
