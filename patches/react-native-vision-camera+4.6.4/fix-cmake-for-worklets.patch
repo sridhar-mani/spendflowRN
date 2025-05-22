@@ -1,0 +1,79 @@
+diff --git a/android/CMakeLists.txt b/android/CMakeLists.txt
+index 1f849df..d3ebcc1 100644
+--- a/android/CMakeLists.txt
++++ b/android/CMakeLists.txt
+@@ -13,33 +13,6 @@ find_library(LOG_LIB log)
+ add_definitions(-DEGL_EGLEXT_PROTOTYPES)
+ add_definitions(-DGL_GLEXT_PROTOTYPES)
+ 
+-if (ENABLE_FRAME_PROCESSORS)
+-    # First, find the worklets library path
+-        find_library(WORKLETS_PATH rnworklets PATHS ${CMAKE_BINARY_DIR}/../../../../app/.cxx/Debug/*/arm64-v8a)
+-        message("VisionCamera: Worklets path: ${WORKLETS_PATH}")
+-    
+-    # Include the headers for RNWorklet
+-        target_include_directories(
+-        ${PACKAGE_NAME}
+-        PRIVATE
+-        "${NODE_MODULES_DIR}/react-native-worklets-core/cpp"
+-        "${NODE_MODULES_DIR}/react-native-worklets-core/android/build/headers"
+-        "${NODE_MODULES_DIR}/react-native-worklets-core/android/build/headers/rnworklets/react-native-worklets-core"
+-    )
+-    
+-    # Link directly against the library file
+-        if(EXISTS "${WORKLETS_PATH}")
+-        message("VisionCamera: Found worklets library at ${WORKLETS_PATH}")
+-        target_link_libraries(
+-            ${PACKAGE_NAME}
+-            ${WORKLETS_PATH}
+-        )
+-        else()
+-        # Fall back to the prefab approach
+-        message("VisionCamera: Using prefab to find worklets")
+-        find_package(react-native-worklets-core REQUIRED CONFIG)
+-        target_link_libraries(
+-            ${PACKAGE_NAME}
+-            react-native-worklets-core::rnworklets
+-        )
+-        endif()
+-endif()
+-
+-
+ # Add react-native-vision-camera sources
+ add_library(
+         ${PACKAGE_NAME}
+@@ -75,6 +48,34 @@ target_include_directories(
+         "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/react/turbomodule" # <-- CallInvokerHolder JNI wrapper
+ )
+ 
++if (ENABLE_FRAME_PROCESSORS)
++    # First, find the worklets library path
++    find_library(WORKLETS_PATH rnworklets PATHS ${CMAKE_BINARY_DIR}/../../../../app/.cxx/Debug/*/arm64-v8a)
++    message("VisionCamera: Worklets path: ${WORKLETS_PATH}")
++
++    # Include the headers for RNWorklet
++    target_include_directories(
++        ${PACKAGE_NAME}
++        PRIVATE
++        "${NODE_MODULES_DIR}/react-native-worklets-core/cpp"
++        "${NODE_MODULES_DIR}/react-native-worklets-core/android/build/headers"
++        "${NODE_MODULES_DIR}/react-native-worklets-core/android/build/headers/rnworklets/react-native-worklets-core"
++    )
++    
++    # Link directly against the library file
++    if(EXISTS "${WORKLETS_PATH}")
++        message("VisionCamera: Found worklets library at ${WORKLETS_PATH}")
++        target_link_libraries(
++            ${PACKAGE_NAME}
++            ${WORKLETS_PATH}
++        )
++    else()
++        # Try the subdirectory approach
++        message("VisionCamera: Using direct subdirectory approach for worklets")
++        add_subdirectory("${NODE_MODULES_DIR}/react-native-worklets-core/android" "worklets_build")
++    endif()
++endif()
++
+ # Link everything together
+ target_link_libraries(
+         ${PACKAGE_NAME}

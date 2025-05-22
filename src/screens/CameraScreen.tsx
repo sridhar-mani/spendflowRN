@@ -9,7 +9,7 @@ import {
 import {runOnJS} from 'react-native-reanimated';
 import tailwind from 'twrnc';
 import TextRecognition from '@react-native-ml-kit/text-recognition';
-import {Alert} from 'react-native';
+import {Alert, Text} from 'react-native';
 
 const CameraScreen = () => {
   const [hasPermission, setHasPermission] = React.useState(false);
@@ -29,25 +29,35 @@ const CameraScreen = () => {
     };
     requestCameraPerm();
   }, []);
+  // Temporarily disabled frame processor due to Android build issues
+  // const frameProcessor = useFrameProcessor(frame => {
+  //   'worklet';
+  //   runOnJS(processFrame)(frame);
+  // }, []);
 
-  const frameProcessor = useFrameProcessor(frame => {
-    'worklet';
-    runOnJS(processFrame)(frame);
-  }, []);
-
-  const processFrame = async frame => {
-    try {
-      const {blocks} = await TextRecognition.recognize(frame);
-      const lines = blocks.flatMap(b => b.lines.map(l => l.text));
-      console.log('Detected lines:', lines);
-    } catch (e) {
-      console.warn('Error processing frame: ', e);
-    }
-  };
-
+  // const processFrame = async frame => {
+  //   try {
+  //     const {blocks} = await TextRecognition.recognize(frame);
+  //     const lines = blocks.flatMap(b => b.lines.map(l => l.text));
+  //     console.log('Detected lines:', lines);
+  //   } catch (e) {
+  //     console.warn('Error processing frame: ', e);
+  //   }
+  // };
   return (
-    <SafeAreaView>
-      <Camera device={devices} isActive={true} style={{flex: 1}}></Camera>
+    <SafeAreaView style={{flex: 1}}>
+      {devices ? (
+        <Camera
+          device={devices}
+          isActive={true}
+          style={{flex: 1}}
+          // frameProcessor={frameProcessor} // Temporarily disabled
+        />
+      ) : (
+        <Text style={{textAlign: 'center', marginTop: 20}}>
+          Camera not available
+        </Text>
+      )}
     </SafeAreaView>
   );
 };
