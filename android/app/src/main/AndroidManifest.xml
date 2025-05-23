@@ -7,6 +7,10 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
     
+        <uses-native-library android:name="libOpenCL.so" android:required="false" />
+    <uses-native-library android:name="libOpenCL-pixel.so" android:required="false" />
+    <uses-native-library android:name="libGLES_mali.so" android:required="false" />
+    <uses-native-library android:name="libPVROCL.so" android:required="false" />
 
 
 

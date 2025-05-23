@@ -13,6 +13,7 @@ import {Alert, Text} from 'react-native';
 import {Button, Icon} from 'react-native-ui-lib';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import RNFS from 'react-native-fs';
+import {init_models} from '../utils/loadModels';
 
 const CameraScreen = () => {
   const [hasPermission, setHasPermission] = React.useState(false);
@@ -20,6 +21,15 @@ const CameraScreen = () => {
   const device = useCameraDevice('back');
   const cameraRef = useRef<Camera>(null);
   console.log(device);
+  const modelRef = useRef(null);
+
+  const prcoessImageforCRAFT = async imgPath => {
+    try {
+      const imageData = 'dfd';
+    } catch (e) {
+      console.error('Error processing image for craft model', e);
+    }
+  };
 
   useEffect(() => {
     const requestCameraPerm = async () => {
@@ -31,9 +41,19 @@ const CameraScreen = () => {
         );
       }
 
+      if (state === 'granted') {
+        const imageProcessor = new ImageProcessor();
+        const result = await init_models();
+        modelRef.current = result;
+      }
+
       setHasPermission(state === 'granted');
     };
     requestCameraPerm();
+
+    return () => {
+      modelRef.current = null;
+    };
   }, []);
 
   const procesImage = async () => {

@@ -11,6 +11,9 @@ const config = {
   transformer: {
     babelTransformerPath: path.resolve(__dirname, 'transformer.js'),
   },
+  resolver: {
+    assetExts: ['tflite', 'bin', 'txt', 'jpg', 'png', 'json'],
+  },
 };
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);
