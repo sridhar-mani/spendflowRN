@@ -14,6 +14,7 @@ import {Button, Icon} from 'react-native-ui-lib';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import RNFS from 'react-native-fs';
 import {init_models} from '../utils/loadModels';
+import Thread from 'react-native-threads';
 
 const CameraScreen = () => {
   const [hasPermission, setHasPermission] = React.useState(false);
@@ -23,9 +24,19 @@ const CameraScreen = () => {
   console.log(device);
   const modelRef = useRef(null);
 
-  const prcoessImageforCRAFT = async imgPath => {
+  const prcoessImage = async imgPath => {
     try {
-      const imageData = 'dfd';
+      const preProcessor = new Thread('../utils/image.processor.ts');
+      preProcessor.postMessage({
+        imagePath: imgPath,
+        model: 'CRAFT'
+      });
+
+      preProcessor.onmessage = async message =>{
+        const {tensor,msg} = message;
+        const output = await modelRef.current.craftModelDelegate.run(tensor);
+        console.log(output)
+      }
     } catch (e) {
       console.error('Error processing image for craft model', e);
     }
@@ -42,9 +53,9 @@ const CameraScreen = () => {
       }
 
       if (state === 'granted') {
-        const imageProcessor = new ImageProcessor();
         const result = await init_models();
         modelRef.current = result;
+
       }
 
       setHasPermission(state === 'granted');
@@ -74,21 +85,7 @@ const CameraScreen = () => {
     }
   };
 
-  // Temporarily disabled frame processor due to Android build issues
-  // const frameProcessor = useFrameProcessor(frame => {
-  //   'worklet';
-  //   runOnJS(processFrame)(frame);
-  // }, []);
 
-  // const processFrame = async frame => {
-  //   try {
-  //     const {blocks} = await TextRecognition.recognize(frame);
-  //     const lines = blocks.flatMap(b => b.lines.map(l => l.text));
-  //     console.log('Detected lines:', lines);
-  //   } catch (e) {
-  //     console.warn('Error processing frame: ', e);
-  //   }
-  // };
   return (
     <SafeAreaView style={{flex: 1}}>
       {device ? (
