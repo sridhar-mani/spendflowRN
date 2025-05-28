@@ -1,5 +1,5 @@
 // App.tsx
-import React, { useEffect } from 'react';
+import React, {useEffect} from 'react';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {CommonActions, NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -16,19 +16,17 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import {colorPalette} from './src/constants/colorTheme';
 import {navigations} from './src/constants/componenetList';
-import RNAndroidNotificationListener  from 'react-native-notification-listener';
-import { startForegroundService } from './src/background/notificationService';
-import { checkNotifeePer } from './src/utils/utils';
+import RNAndroidNotificationListener from 'react-native-notification-listener';
+import {startForegroundService} from './src/background/notificationService';
+import {checkNotifeePer} from './src/utils/utils';
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
-
-  
   useEffect(() => {
     const requestPermission = async () => {
       const notifeePerm = await checkNotifeePer();
-      if(( notifeePerm ==='denied' ||  notifeePerm ==='unknown')){
+      if (notifeePerm === 'denied' || notifeePerm === 'unknown') {
         RNAndroidNotificationListener.requestPermission();
         startForegroundService();
       }
@@ -36,9 +34,6 @@ export default function App() {
     requestPermission();
   }, []);
 
-  
-
-    
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
@@ -51,7 +46,7 @@ export default function App() {
                 tabBar={({navigation, state, descriptors, insets}) => {
                   const paperState = {
                     index: state.index,
-                    routes: navigations, 
+                    routes: navigations,
                   };
 
                   return (
@@ -77,7 +72,7 @@ export default function App() {
                 {navigations.map(nav => (
                   <Tab.Screen
                     key={nav.key}
-                    name={nav.key} 
+                    name={nav.key}
                     component={nav.component}
                   />
                 ))}

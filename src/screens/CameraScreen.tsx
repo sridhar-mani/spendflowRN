@@ -12,28 +12,44 @@ import TextRecognition from '@react-native-ml-kit/text-recognition';
 import {Alert, Text} from 'react-native';
 import {Button, Icon} from 'react-native-ui-lib';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import RNFS from 'react-native-fs';
-import {init_models} from '../utils/loadModels';
-import { imageProcessoring } from '../utils/imageProcessor';
+import RNFS, {stat} from 'react-native-fs';
+import {imageProcessoring} from '../utils/imagePreprocessing';
+import {useTensorflowModel} from 'react-native-fast-tflite';
 
 const CameraScreen = () => {
   const [hasPermission, setHasPermission] = React.useState(false);
   const [recognizedText, setRecognizedText] = React.useState('');
   const device = useCameraDevice('back');
   const cameraRef = useRef<Camera>(null);
-  console.log(device);
-  const modelRef = useRef(null);
+
+  const craftModel = useTensorflowModel(
+    require('../../assets/craft_model.tflite'),
+    'default',
+  );
+  const yoloModel = useTensorflowModel(
+    require('../../assets/yolov5nu.tflite'),
+    'android-gpu',
+  );
+  const modelRef = useRef<any>(null);
 
   const prcoessImage = async imgPath => {
     try {
-
+      console.log('imageProcessoring =', imageProcessoring);
       const resCraft = await imageProcessoring({
-        imagePath: imgPath, model: 'CRAFT'});
+        imagePath: imgPath,
+        model: 'CRAFT',
+      });
 
-        const resYolo = await imageProcessoring({
-          imagePath:imgPath, model: 'YOLO'});
+      const outCraft = modelRef.current.craftModel.model.run(resCraft?.tensor);
 
+      console.log(outCraft);
 
+      const resYolo = await imageProcessoring({
+        imagePath: imgPath,
+        model: 'YOLO',
+      });
+
+      console.log(resYolo, resCraft);
     } catch (e) {
       console.error('Error processing image for craft model', e);
     }
@@ -41,7 +57,10 @@ const CameraScreen = () => {
 
   useEffect(() => {
     const requestCameraPerm = async () => {
+      console.log('sdf');
+
       const state = await Camera.requestCameraPermission();
+      console.log('Permission state:', state);
       if (state === 'denied') {
         Alert.alert(
           'Camera Permission',
@@ -50,19 +69,36 @@ const CameraScreen = () => {
       }
 
       if (state === 'granted') {
-        const result = await init_models();
-        modelRef.current = result;
-
+        try {
+          // const result = await init_models();
+          // if (result !== undefined) {
+          //   modelRef.current = result;
+          // }
+        } catch (er) {
+          console.error('Error initializing models', er);
+        }
       }
 
       setHasPermission(state === 'granted');
     };
-    requestCameraPerm();
 
+    requestCameraPerm();
     return () => {
-      modelRef.current = null;
+      if (modelRef.current) {
+        modelRef.current = null;
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (craftModel && yoloModel) {
+      modelRef.current = {
+        craftModel,
+        yoloModel,
+      };
+      console.log('Models loaded');
+    }
+  }, [craftModel, yoloModel]);
 
   const procesImage = async () => {
     if (!cameraRef.current) return;
@@ -73,15 +109,15 @@ const CameraScreen = () => {
       });
 
       console.log(photo.path);
+      const res = await prcoessImage(photo.path);
       const result = await TextRecognition.recognize('file://' + photo.path);
 
-      console.log(result);
+      console.log(res);
       await RNFS.unlink(photo.path);
     } catch (er) {
       console.error('Unable to process image', er);
     }
   };
-
 
   return (
     <SafeAreaView style={{flex: 1}}>

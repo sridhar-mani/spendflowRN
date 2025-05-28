@@ -13,6 +13,9 @@ const config = {
   },
   resolver: {
     assetExts: ['tflite', 'bin', 'txt', 'jpg', 'png', 'json'],
+    extraNodeModules: {
+      events: path.resolve(__dirname, 'node_modules/events'),
+    },
   },
 };
 
