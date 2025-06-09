@@ -12,9 +12,9 @@ import TextRecognition from '@react-native-ml-kit/text-recognition';
 import {Alert, Text} from 'react-native';
 import {Button, Icon} from 'react-native-ui-lib';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import RNFS, {stat} from 'react-native-fs';
-import {imageProcessoring} from '../utils/imagePreprocessing';
-import {useTensorflowModel} from 'react-native-fast-tflite';
+import RNFS from 'react-native-fs';
+import {init_models} from '../utils/loadModels';
+import Thread from 'react-native-threads';
 
 const CameraScreen = () => {
   const [hasPermission, setHasPermission] = React.useState(false);
@@ -34,22 +34,17 @@ const CameraScreen = () => {
 
   const prcoessImage = async imgPath => {
     try {
-      console.log('imageProcessoring =', imageProcessoring);
-      const resCraft = await imageProcessoring({
+      const preProcessor = new Thread('../utils/image.processor.ts');
+      preProcessor.postMessage({
         imagePath: imgPath,
-        model: 'CRAFT',
+        model: 'CRAFT'
       });
 
-      const outCraft = modelRef.current.craftModel.model.run(resCraft?.tensor);
-
-      console.log(outCraft);
-
-      const resYolo = await imageProcessoring({
-        imagePath: imgPath,
-        model: 'YOLO',
-      });
-
-      console.log(resYolo, resCraft);
+      preProcessor.onmessage = async message =>{
+        const {tensor,msg} = message;
+        const output = await modelRef.current.craftModelDelegate.run(tensor);
+        console.log(output)
+      }
     } catch (e) {
       console.error('Error processing image for craft model', e);
     }

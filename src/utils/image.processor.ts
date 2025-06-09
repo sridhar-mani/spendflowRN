@@ -1,10 +1,10 @@
 import ImageResizer from '@bam.tech/react-native-image-resizer';
 import RNFS from 'react-native-fs';
 import getImage from 'react-native-pixel-image';
+import self from 'react-native-threads'
 
-import {spawnThread} from 'react-native-multithreading';
 
-const imageProcessoring = async (message)=> {
+self.onmessage = async (message)=> {
 
   const {imagePath, model} = message;
 
@@ -12,18 +12,18 @@ const imageProcessoring = async (message)=> {
     const tensor = await preprocessForCRAFT(imagePath);
     const isValid = await validateTensor(tensor, [1, 3, 768, 768]);
     if(isValid){
-      return {tensor, msg: 'Tensor is valid'};
+      self.postMessage({tensor, msg: 'Tensor is valid'});
     }else{
-      return {msg: 'Invalid tensor shape for CRAFT model'};
+      self.postMessage({msg: 'Invalid tensor shape for CRAFT model'});
     }
   }
   if(model === 'YOLO'){
     const tensor = await preprocessForYOLO(imagePath);
     const isValid = await validateTensor(tensor, [1, 3, 640, 640]);
     if(isValid){
-      return {tensor,msg: 'Tensor is valid'};
+      self.postMessage({tensor,msg: 'Tensor is valid'});
     }else{
-      return {msg: 'Invalid tensor shape for CRAFT model'};
+      self.postMessage({msg: 'Invalid tensor shape for CRAFT model'});
     }
   }
 
@@ -58,16 +58,13 @@ const imageProcessoring = async (message)=> {
         targetWidth,
         targetHeight,
       );
-      const tensor = await spawnThread(async ()=>{
-        const responce = await imageDataToTensor(
+      const tensor = await imageDataToTensor(
         pixelData,
         targetWidth,
         targetHeight,
         normalize,
         channelsOrder,
-      )
-      return responce;
-      })
+      );
       if (resizedImage.uri.startsWith('file://')) {
         await RNFS.unlink(resizedImage.uri.replace('file://', ''));
       }
@@ -148,6 +145,3 @@ const imageProcessoring = async (message)=> {
     return true;
   }
 }
-
-
-export {imageProcessoring};
