@@ -1,405 +1,439 @@
-import React, {useState, useRef, useEffect, useMemo} from 'react';
-import {View, ScrollView, TouchableOpacity, Dimensions} from 'react-native';
+import React, {useState} from 'react';
+import {ScrollView} from 'react-native';
 import {
-  TextInput,
-  Button,
+  View,
   Text,
-  Chip,
-  HelperText,
-  Menu,
-  Divider,
-} from 'react-native-paper';
+  TextField,
+  Colors,
+  TouchableOpacity,
+} from 'react-native-ui-lib';
 import DatePicker from 'react-native-date-picker';
 import {format} from 'date-fns';
-import tw from 'twrnc';
+import tailwind from 'twrnc';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
+//@ts-ignore
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import useStore from '../store';
+import {suggestCategory} from '../utils/categoryPredictor';
+import {useTheme} from '../constants/themeContext';
 
 // Create validation schema with Yup
 const TransactionSchema = Yup.object().shape({
   amount: Yup.string()
     .required('Amount is required')
-    .test(
-      'is-valid-amount',
-      'Please enter a valid amount',
-      value => !isNaN(parseFloat(value || '0')),
-    ),
+    .test('is-valid-amount', 'Please enter a valid amount', value => {
+      if (!value) return false;
+      const numValue = parseFloat(value);
+      return !isNaN(numValue) && numValue > 0;
+    }),
   date: Yup.date().required('Date is required'),
-  description: Yup.string().required('Description is required'),
-  type: Yup.string().required('Type is required'),
+  description: Yup.string()
+    .required('Description is required')
+    .min(2, 'Description must be at least 2 characters'),
+  type: Yup.string()
+    .required('Type is required')
+    .oneOf(
+      ['expense', 'income', 'invest', 'savings'],
+      'Invalid transaction type',
+    ),
   category: Yup.string().required('Category is required'),
-  accountName: Yup.string().optional(),
+  suggestedCategory: Yup.string(),
 });
 
-// Transaction form component
+interface TransactionFormProps {
+  readonly txn?: string | null;
+  readonly onSubmit: (data: any) => void;
+  readonly onCancel: () => void;
+}
+
 export default function AddTransactionForm({
-  txn = '',
+  txn = null,
   onSubmit,
-  accounts = [],
   onCancel,
-}) {
-  // Get transaction state from Zustand store
-  const {
-    transaction,
-    updateTransaction,
-    resetTransaction,
-    addTagToTransaction,
-    removeTagFromTransaction,
-    transactionTypes,
-    getCategoriesForType,
-    addTag,
-    addCategory,
-    transactionHistory,
-    editTransaction,
-  } = useStore();
+}: TransactionFormProps) {
+  const {getCategoriesForType, transactionHistory} = useStore() as any;
+  const {theme, isDarkMode} = useTheme();
 
-  const [newTag, setNewTag] = useState('');
-  const [typeMenuVisible, setTypeMenuVisible] = useState(false);
-  const [categoryMenuVisible, setCategoryMenuVisible] = useState(false);
-  const [accountMenuVisible, setAccountMenuVisible] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-
-  // References for menu positioning
-  const typeButtonRef = useRef(null);
-  const categoryButtonRef = useRef(null);
-  const accountButtonRef = useRef(null);
-
-  // Menu position state
-  const [typeMenuPosition, setTypeMenuPosition] = useState({x: 0, y: 0});
-  const [categoryMenuPosition, setCategoryMenuPosition] = useState({
-    x: 0,
-    y: 0,
-  });
-  const [accountMenuPosition, setAccountMenuPosition] = useState({x: 0, y: 0});
-
-  // Calculate menu position when button is pressed
-  const measureButton = (ref, setPosition, setVisible) => {
-    if (ref.current) {
-      ref.current.measure((fx, fy, width, height, px, py) => {
-        setPosition({x: px, y: py + height});
-        setVisible(true);
-      });
-    }
+  const txnEdit = txn
+    ? transactionHistory?.find((each: any) => each.id === txn)
+    : null;
+  const initialValues = {
+    type: txnEdit?.type ?? 'expense',
+    description: txnEdit?.description ?? '',
+    amount: txnEdit?.amount ? String(txnEdit.amount) : '',
+    category: txnEdit?.category ?? '',
+    date: txnEdit?.date ? new Date(txnEdit.date) : new Date(),
+    tags: txnEdit?.tags ?? [],
+    suggestedCategory: '',
   };
 
-  const handleAddTag = () => {
-    if (newTag && !transaction.tags.includes(newTag)) {
-      addTagToTransaction(newTag);
-      addTag(newTag); // Also add to global tags
-      setNewTag('');
-    }
-  };
+  const [selectedType, setSelectedType] = useState(initialValues.type);
 
-  const handleRemoveTag = tag => {
-    removeTagFromTransaction(tag);
-  };
-
-  const formatCategoryName = name => {
-    return name.charAt(0).toUpperCase() + name.slice(1);
-  };
-
-  const txnEdit = useMemo(() => {
-
-    return transactionHistory.find(each => each.id === txn);
-  }, [txn, transactionHistory]);
-
+  const categories = getCategoriesForType
+    ? getCategoriesForType(selectedType)
+    : [
+        'food',
+        'transport',
+        'entertainment',
+        'shopping',
+        'utilities',
+        'healthcare',
+        'other',
+      ];
   return (
-    <View style={tw`bg-white rounded-lg`}>
+    <View
+      style={[
+        tailwind`flex-1 rounded-t-3xl shadow-lg`,
+        {backgroundColor: theme.background},
+      ]}>
       {/* Header */}
-      <View style={tw`bg-gray-100 p-4 rounded-t-lg`}>
-        <Text style={tw`text-lg font-bold text-center`}>
-          {!txnEdit ? 'Add Transaction' : 'Edit Transaction'}
+      <View
+        style={[
+          tailwind`px-6 py-4 border-b rounded-t-3xl`,
+          {
+            backgroundColor: theme.backgroundSecondary,
+            borderBottomColor: theme.border,
+          },
+        ]}>
+        <View style={tailwind`flex-row items-center justify-between`}>
+          <View style={tailwind`w-6`} />
+          <Text
+            text60
+            style={[tailwind`font-bold text-center`, {color: theme.text}]}>
+            {txnEdit ? 'Edit Transaction' : 'Add Transaction'}
+          </Text>
+          <TouchableOpacity
+            onPress={onCancel}
+            style={[
+              tailwind`w-6 h-6 rounded-full items-center justify-center`,
+              {backgroundColor: isDarkMode ? theme.border : '#e5e7eb'},
+            ]}>
+            <Ionicons name="close" size={14} color={theme.textSecondary} />
+          </TouchableOpacity>
+        </View>
+        <Text
+          text80
+          style={[tailwind`text-center mt-1`, {color: theme.textSecondary}]}>
+          {txnEdit
+            ? 'Update your transaction details'
+            : 'Track your spending and income'}
         </Text>
       </View>
-
-      <ScrollView style={tw`max-h-[500px] px-4 pt-4`}>
+      <ScrollView style={tailwind`flex-1`} showsVerticalScrollIndicator={false}>
         <Formik
-          key={txnEdit?.id ?? 'new'}
-          initialValues={{
-            type: txnEdit?.type || transactionTypes.EXPENSE,
-            description: txnEdit?.description || '',
-            amount: parseFloat(txnEdit?.amount ?? 0).toFixed(2) || '',
-            date: txnEdit?.date || new Date(),
-            category: txnEdit?.category || '',
-            accountName:
-              txnEdit?.accountName ||
-              (accounts.length > 0 ? accounts[0].name : ''),
-            tags: txnEdit?.tags || [],
-          }}
+          initialValues={initialValues}
           validationSchema={TransactionSchema}
-          onSubmit={(values, {resetForm}) => {
-            const numericAmount = parseFloat(values.amount);
-            if (isNaN(numericAmount)) return;
-            const d =
-              values.date instanceof Date ? values.date : new Date(values.date);
-
-            // Create complete transaction object with tags
-            const completeTransaction = {
-              ...values,
-              amount: numericAmount,
-              date: d.toISOString(),
-              tags: transaction.tags,
-            };
-
-            // Update store
-            Object.keys(values).forEach(key => {
-              updateTransaction(key, values[key]);
-            });
-
-            // Submit to parent component
-            onSubmit(completeTransaction);
-            editTransaction(txnEdit?.id, completeTransaction);
-
-            // Reset form and store
-            resetForm();
-            resetTransaction();
+          onSubmit={values => {
+            console.log('Form submitted with values:', values);
+            try {
+              const completeTransaction = {
+                ...values,
+                amount: parseFloat(values.amount),
+                date: values.date.toISOString(),
+                id: txnEdit?.id ?? Date.now().toString(),
+              };
+              console.log('Complete transaction:', completeTransaction);
+              onSubmit(completeTransaction);
+            } catch (error) {
+              console.error('Error creating transaction:', error);
+            }
           }}>
           {({
-            handleChange,
-            handleSubmit,
-            setFieldValue,
             values,
             errors,
             touched,
-          }) => {
-            if (!(values.date instanceof Date)) {
-              values.date = new Date(values.date);
-            }
-
-            return (
-              <View>
-                {/* Type and Amount Row */}
-                <View style={tw`flex-row mb-4`}>
-                  {/* Type */}
-                  <View style={tw`flex-1 mr-2`}>
-                    <Text style={tw`text-sm mb-1 text-gray-700`}>Type</Text>
+            handleChange,
+            handleSubmit,
+            setFieldValue,
+          }) => (
+            <View style={[tailwind`p-6`, {backgroundColor: theme.background}]}>
+              {/* Transaction Type */}
+              <View style={tailwind`mb-6`}>
+                <Text
+                  text70
+                  style={[tailwind`mb-3 font-semibold`, {color: theme.text}]}>
+                  Transaction Type
+                </Text>
+                <View style={tailwind`flex-row gap-2`}>
+                  {['expense', 'income', 'invest'].map(type => (
                     <TouchableOpacity
-                      ref={typeButtonRef}
-                      onPress={() =>
-                        measureButton(
-                          typeButtonRef,
-                          setTypeMenuPosition,
-                          setTypeMenuVisible,
-                        )
-                      }
-                      style={tw`p-2.5 h-14 border border-gray-500 rounded bg-white justify-center`}>
-                      <Text>
-                        {values.type.charAt(0).toUpperCase() +
-                          values.type.slice(1)}
-                      </Text>
-                    </TouchableOpacity>
-                    <Menu
-                      visible={typeMenuVisible}
-                      onDismiss={() => setTypeMenuVisible(false)}
-                      anchor={typeMenuPosition}>
-                      {Object.values(transactionTypes).map(type => (
-                        <Menu.Item
-                          key={String(type)}
-                          onPress={() => {
-                            setFieldValue('type', type);
-                            setFieldValue('category', '');
-                            updateTransaction('type', type);
-                            updateTransaction('category', '');
-                            setTypeMenuVisible(false);
-                          }}
-                          title={type.charAt(0).toUpperCase() + type.slice(1)}
-                        />
-                      ))}
-                    </Menu>
-                    {touched.type && errors.type && (
-                      <HelperText type="error">{errors.type}</HelperText>
-                    )}
-                  </View>
-
-                  {/* Amount */}
-                  <View style={tw`flex-1`}>
-                    <Text style={tw`text-sm mb-1 text-gray-700`}>Amount</Text>
-                    <TextInput
-                      style={tw`bg-white h-14`}
-                      mode="outlined"
-                      keyboardType="numeric"
-                      placeholder="0.00"
-                      value={values.amount}
-                      onChangeText={value => {
-                        handleChange('amount')(value);
-                        updateTransaction('amount', value);
+                      key={type}
+                      onPress={() => {
+                        setFieldValue('type', type);
+                        setSelectedType(type);
+                        setFieldValue('category', ''); // Reset category when type changes
                       }}
-                      error={touched.amount && !!errors.amount}
-                    />
-                    {touched.amount && errors.amount && (
-                      <HelperText type="error">{errors.amount}</HelperText>
-                    )}
-                  </View>
-                </View>
-
-                {/* Description */}
-                <View style={tw`mb-4`}>
-                  <Text style={tw`text-sm mb-1 text-gray-700`}>
-                    Description
-                  </Text>
-                  <TextInput
-                    style={tw`bg-white`}
-                    mode="outlined"
-                    placeholder="Enter description"
-                    value={values.description}
-                    onChangeText={value => {
-                      handleChange('description')(value);
-                      updateTransaction('description', value);
-                    }}
-                    error={touched.description && !!errors.description}
-                  />
-                  {touched.description && errors.description && (
-                    <HelperText type="error">{errors.description}</HelperText>
-                  )}
-                </View>
-
-                {/* Category and Date Row */}
-                <View style={tw`flex-row mb-4`}>
-                  {/* Category */}
-                  <View style={tw`flex-1 mr-2`}>
-                    <Text style={tw`text-sm mb-1 text-gray-700`}>Category</Text>
-                    <TouchableOpacity
-                      ref={categoryButtonRef}
-                      onPress={() =>
-                        measureButton(
-                          categoryButtonRef,
-                          setCategoryMenuPosition,
-                          setCategoryMenuVisible,
-                        )
-                      }
-                      style={tw`p-2.5 h-14 border border-gray-300 rounded bg-white justify-center`}>
-                      <Text>
-                        {values.category
-                          ? formatCategoryName(values.category)
-                          : 'Select category'}
+                      style={[
+                        tailwind`flex-1 px-4 py-3 rounded-xl border-2 shadow-sm`,
+                        values.type === type
+                          ? {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            }
+                          : {
+                              backgroundColor: theme.cardBackground,
+                              borderColor: theme.border,
+                            },
+                      ]}
+                      activeOpacity={0.7}>
+                      <Text
+                        text70
+                        style={[
+                          tailwind`capitalize text-center font-semibold`,
+                          {
+                            color:
+                              values.type === type ? '#FFFFFF' : theme.text,
+                          },
+                        ]}>
+                        {type}
                       </Text>
                     </TouchableOpacity>
-                    <Menu
-                      visible={categoryMenuVisible}
-                      onDismiss={() => setCategoryMenuVisible(false)}
-                      anchor={categoryMenuPosition}>
-                      {getCategoriesForType(values.type).map(category => (
-                        <Menu.Item
-                          key={category}
-                          onPress={() => {
-                            setFieldValue('category', category);
-                            updateTransaction('category', category);
-                            setCategoryMenuVisible(false);
-                          }}
-                          title={formatCategoryName(category)}
-                        />
-                      ))}
-                      <Divider />
-                      <Menu.Item
-                        title="+ Add New Category"
-                        onPress={() => {
-                          // Here you could show a dialog to add new category
-                          // For now, just as an example, add a random one
-                          const newCategory = `custom-${Math.floor(
-                            Math.random() * 1000,
-                          )}`;
-                          addCategory(values.type, newCategory);
-                          setFieldValue('category', newCategory);
-                          updateTransaction('category', newCategory);
-                          setCategoryMenuVisible(false);
-                        }}
-                      />
-                    </Menu>
-                    {touched.category && errors.category && (
-                      <HelperText type="error">{errors.category}</HelperText>
-                    )}
-                  </View>
-
-                  {/* Date */}
-                  <View style={tw`flex-1`}>
-                    <Text style={tw`text-sm mb-1 text-gray-700`}>Date</Text>
-                    <TouchableOpacity
-                      onPress={() => setShowDatePicker(true)}
-                      style={tw`p-2.5 h-14 border border-gray-300 rounded bg-white justify-center`}>
-                      <Text>{format(values.date, 'MMMM do, yyyy')}</Text>
-                    </TouchableOpacity>
-                    {showDatePicker && (
-                      <DatePicker
-                        modal
-                        mode={'date'}
-                        open={showDatePicker}
-                        date={
-                          values.date instanceof Date
-                            ? values.date
-                            : new Date(values.date)
-                        }
-                        onConfirm={selectedDate => {
-                          setShowDatePicker(false);
-                          if (selectedDate) {
-                            setFieldValue('date', selectedDate);
-                            updateTransaction('date', selectedDate);
-                          }
-                        }}
-                        onCancel={() => setShowDatePicker(false)}
-                      />
-                    )}
-                    {touched.date && errors.date && (
-                      <HelperText type="error">{errors.date}</HelperText>
-                    )}
-                  </View>
-                </View>
-
-                {/* Tags */}
-                <View style={tw`mb-6`}>
-                  <Text style={tw`text-sm mb-1 text-gray-700`}>Tags</Text>
-                  <View style={tw`flex-row flex-wrap mb-2`}>
-                    {values.tags.map(tag => (
-                      <Chip
-                        key={tag}
-                        style={tw`m-1`}
-                        onClose={() => handleRemoveTag(tag)}>
-                        #{tag}
-                      </Chip>
-                    ))}
-                  </View>
-                  <View style={tw`flex-row items-center`}>
-                    <TextInput
-                      style={tw`flex-1 bg-white mr-2`}
-                      mode="outlined"
-                      placeholder="Enter tag (e.g. vacation)"
-                      value={newTag}
-                      onChangeText={setNewTag}
-                    />
-                    <Button
-                      mode="contained"
-                      disabled={!newTag}
-                      onPress={handleAddTag}
-                      style={tw`rounded-full bg-violet-500 h-14 w-14 items-center justify-center`}
-                      contentStyle={tw`h-14 w-14`}
-                      labelStyle={tw`m-0 p-0 text-white text-xl`}>
-                      +
-                    </Button>
-                  </View>
-                </View>
-
-                {/* Action Buttons */}
-                <View style={tw`p-2 flex flex-row items-center justify-evenly`}>
-                  <Button
-                    mode="contained"
-                    onPress={handleSubmit}
-                    style={tw`rounded-md flex-1 mr-2 bg-purple-600 py-1 mb-4`}>
-                    Save Transaction
-                  </Button>
-                  <Button
-                    mode="text"
-                    onPress={() => {
-                      resetTransaction();
-                      onCancel();
-                    }}
-                    style={tw`rounded-md flex-1 py-1 mb-4`}
-                    textColor="red">
-                    Cancel
-                  </Button>
-                </View>
+                  ))}
+                </View>{' '}
+              </View>{' '}
+              {/* Amount */}
+              <View style={tailwind`mb-6`}>
+                <Text
+                  text70
+                  style={[tailwind`mb-2 font-semibold`, {color: theme.text}]}>
+                  Amount (₹)
+                </Text>
+                <TextField
+                  value={values.amount}
+                  onChangeText={handleChange('amount')}
+                  keyboardType="numeric"
+                  placeholder="Enter amount"
+                  placeholderTextColor={theme.textSecondary}
+                  fieldStyle={[
+                    tailwind`rounded-xl px-4 py-3 border`,
+                    {
+                      backgroundColor: theme.backgroundSecondary,
+                      borderColor: theme.border,
+                      color: theme.text,
+                    },
+                  ]}
+                  error={!!(touched.amount && errors.amount)}
+                  validationMessage={
+                    touched.amount && errors.amount
+                      ? typeof errors.amount === 'string'
+                        ? errors.amount
+                        : 'Invalid amount'
+                      : undefined
+                  }
+                />
               </View>
-            );
-          }}
+              {/* Description */}
+              <View style={tailwind`mb-6`}>
+                <Text
+                  text70
+                  style={[tailwind`mb-2 font-semibold`, {color: theme.text}]}>
+                  Description
+                </Text>
+                <TextField
+                  value={values.description}
+                  placeholder="Enter description"
+                  placeholderTextColor={theme.textSecondary}
+                  onChangeText={text => {
+                    handleChange('description')(text);
+
+                    // If description is being typed and category is empty, suggest a category
+                    if (text.length > 3 && !values.category) {
+                      const suggestedCategory = suggestCategory(
+                        text,
+                        values.type,
+                      );
+                      if (
+                        suggestedCategory &&
+                        categories.includes(suggestedCategory)
+                      ) {
+                        // Don't auto-set, just prepare suggestion
+                        setFieldValue('suggestedCategory', suggestedCategory);
+                      }
+                    }
+                  }}
+                  fieldStyle={[
+                    tailwind`rounded-xl px-4 py-3 border`,
+                    {
+                      backgroundColor: theme.backgroundSecondary,
+                      borderColor: theme.border,
+                      color: theme.text,
+                    },
+                  ]}
+                  error={!!(touched.description && errors.description)}
+                  validationMessage={
+                    touched.description && errors.description
+                      ? typeof errors.description === 'string'
+                        ? errors.description
+                        : 'Invalid description'
+                      : undefined
+                  }
+                />
+
+                {/* Category suggestion */}
+                {!!(values.suggestedCategory && !values.category) && (
+                  <View
+                    style={[
+                      tailwind`mt-3 p-3 rounded-xl border`,
+                      {
+                        backgroundColor: isDarkMode ? theme.border : '#dbeafe',
+                        borderColor: theme.primary,
+                      },
+                    ]}>
+                    <Text
+                      style={[
+                        tailwind`text-sm mb-2 font-medium`,
+                        {color: theme.primary},
+                      ]}>
+                      💡 Suggested Category
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setFieldValue('category', values.suggestedCategory)
+                      }
+                      style={[
+                        tailwind`rounded-lg px-3 py-2 self-start`,
+                        {
+                          backgroundColor: isDarkMode
+                            ? theme.primary
+                            : '#93c5fd',
+                        },
+                      ]}>
+                      <Text
+                        style={[
+                          tailwind`font-semibold capitalize`,
+                          {color: isDarkMode ? '#FFFFFF' : theme.primary},
+                        ]}>
+                        {values.suggestedCategory}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+              {/* Category */}
+              <View style={tailwind`mb-6`}>
+                <Text
+                  text70
+                  style={[tailwind`mb-3 font-semibold`, {color: theme.text}]}>
+                  Category
+                </Text>
+                <View style={tailwind`flex-row flex-wrap gap-2`}>
+                  {categories.map((category: string) => (
+                    <TouchableOpacity
+                      key={category}
+                      onPress={() => setFieldValue('category', category)}
+                      style={[
+                        tailwind`px-4 py-2 rounded-xl border-2 shadow-sm`,
+                        values.category === category
+                          ? {
+                              backgroundColor: theme.success,
+                              borderColor: theme.success,
+                            }
+                          : {
+                              backgroundColor: theme.backgroundSecondary,
+                              borderColor: theme.border,
+                            },
+                      ]}>
+                      <Text
+                        text80
+                        style={[
+                          tailwind`capitalize font-medium`,
+                          {
+                            color:
+                              values.category === category
+                                ? '#FFFFFF'
+                                : theme.text,
+                          },
+                        ]}>
+                        {category}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {touched.category && errors.category && (
+                  <Text style={tailwind`text-red-500 text-sm mt-2`}>
+                    {typeof errors.category === 'string'
+                      ? errors.category
+                      : 'Please select a category'}
+                  </Text>
+                )}
+              </View>{' '}
+              {/* Date */}
+              <View style={tailwind`mb-6`}>
+                <Text
+                  text70
+                  style={[tailwind`mb-3 font-semibold`, {color: theme.text}]}>
+                  Date
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  style={[
+                    tailwind`rounded-xl px-4 py-3 border shadow-sm flex-row items-center justify-between`,
+                    {
+                      backgroundColor: theme.backgroundSecondary,
+                      borderColor: theme.border,
+                    },
+                  ]}>
+                  <Text
+                    text70
+                    style={[tailwind`font-medium`, {color: theme.text}]}>
+                    {format(values.date, 'MMMM do, yyyy')}
+                  </Text>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={20}
+                    color={theme.textSecondary}
+                  />
+                </TouchableOpacity>
+
+                <DatePicker
+                  modal
+                  open={showDatePicker}
+                  date={values.date}
+                  mode="date"
+                  onConfirm={selectedDate => {
+                    setShowDatePicker(false);
+                    setFieldValue('date', selectedDate);
+                  }}
+                  onCancel={() => setShowDatePicker(false)}
+                />
+              </View>{' '}
+              {/* Action Buttons */}
+              <View style={tailwind`flex-row gap-4 pt-6 pb-2`}>
+                <TouchableOpacity
+                  onPress={onCancel}
+                  style={[
+                    tailwind`flex-1 rounded-xl py-4 items-center border`,
+                    {
+                      backgroundColor: theme.backgroundSecondary,
+                      borderColor: theme.border,
+                    },
+                  ]}>
+                  <Text
+                    text70
+                    style={[
+                      tailwind`font-semibold`,
+                      {color: theme.textSecondary},
+                    ]}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleSubmit}
+                  style={[
+                    tailwind`flex-1 rounded-xl py-4 items-center shadow-lg`,
+                    {backgroundColor: theme.primary},
+                  ]}>
+                  <Text
+                    text70
+                    style={[tailwind`font-semibold`, {color: '#FFFFFF'}]}>
+                    {txnEdit ? 'Update' : 'Add Transaction'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </Formik>
       </ScrollView>
     </View>

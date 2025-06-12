@@ -3,6 +3,7 @@ import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
 import CameraScreen from '../screens/CameraScreen';
+import AddTransactionScreen from '../screens/AddTransactionScreen';
 
 const navigations = [
   {
@@ -19,26 +20,26 @@ const navigations = [
     unfocusedIcon: 'book-outline',
     component: HistoryScreen,
   },
-  // {
-  //   key: 'analytics',
-  //   title: 'Analytics',
-  //   focusedIcon: 'bar-chart',
-  //   unfocusedIcon: 'bar-chart-outline',
-  //   component: AnalyticsScreen,
-  // },
-  // {
-  //   key: 'settings',
-  //   title: 'Settings',
-  //   focusedIcon: 'settings',
-  //   unfocusedIcon: 'settings-outline',
-  //   component: SettingsScreen,
-  // },
   {
     key: 'camera',
-    title: 'Camera',
-    focusedIcon: 'camera',
-    unfocusedIcon: 'camera-outline',
-    component: CameraScreen,
+    title: 'Add',
+    focusedIcon: 'add-circle',
+    unfocusedIcon: 'add-circle-outline',
+    component: AddTransactionScreen,
+  },
+  {
+    key: 'settings',
+    title: 'Settings',
+    focusedIcon: 'settings',
+    unfocusedIcon: 'settings-outline',
+    component: SettingsScreen,
+  },
+  {
+    key: 'analytics',
+    title: 'Analytics',
+    focusedIcon: 'bar-chart',
+    unfocusedIcon: 'bar-chart-outline',
+    component: AnalyticsScreen,
   },
 ];
 
