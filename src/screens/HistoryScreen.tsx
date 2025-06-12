@@ -147,7 +147,7 @@ const HistoryScreen = () => {
           </View>
 
           {/* Summary cards */}
-          <View style={tw`flex-row justify-between `}>
+          <View style={tw`flex-row gap-3 justify-between `}>
             {(activeFilter === 'all' || activeFilter === 'income') && (
               <Card style={tw`flex-1 `}>
                 <Card.Content>

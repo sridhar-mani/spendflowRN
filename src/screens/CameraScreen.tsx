@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {
   Camera,
@@ -10,45 +10,11 @@ import {runOnJS} from 'react-native-reanimated';
 import tailwind from 'twrnc';
 import TextRecognition from '@react-native-ml-kit/text-recognition';
 import {Alert, Text} from 'react-native';
-import {Button, Icon} from 'react-native-ui-lib';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import RNFS from 'react-native-fs';
-import {init_models} from '../utils/loadModels';
-import Thread from 'react-native-threads';
 
 const CameraScreen = () => {
   const [hasPermission, setHasPermission] = React.useState(false);
-  const [recognizedText, setRecognizedText] = React.useState('');
-  const device = useCameraDevice('back');
-  const cameraRef = useRef<Camera>(null);
-
-  const craftModel = useTensorflowModel(
-    require('../../assets/craft_model.tflite'),
-    'default',
-  );
-  const yoloModel = useTensorflowModel(
-    require('../../assets/yolov5nu.tflite'),
-    'android-gpu',
-  );
-  const modelRef = useRef<any>(null);
-
-  const prcoessImage = async imgPath => {
-    try {
-      const preProcessor = new Thread('../utils/image.processor.ts');
-      preProcessor.postMessage({
-        imagePath: imgPath,
-        model: 'CRAFT'
-      });
-
-      preProcessor.onmessage = async message =>{
-        const {tensor,msg} = message;
-        const output = await modelRef.current.craftModelDelegate.run(tensor);
-        console.log(output)
-      }
-    } catch (e) {
-      console.error('Error processing image for craft model', e);
-    }
-  };
+  const devices = useCameraDevice('back');
+  console.log(devices);
 
   useEffect(() => {
     const requestCameraPerm = async () => {
@@ -62,18 +28,6 @@ const CameraScreen = () => {
           'Camera access is required to scan receipts.',
         );
       }
-
-      if (state === 'granted') {
-        try {
-          // const result = await init_models();
-          // if (result !== undefined) {
-          //   modelRef.current = result;
-          // }
-        } catch (er) {
-          console.error('Error initializing models', er);
-        }
-      }
-
       setHasPermission(state === 'granted');
     };
 
@@ -84,73 +38,34 @@ const CameraScreen = () => {
       }
     };
   }, []);
+  // Temporarily disabled frame processor due to Android build issues
+  // const frameProcessor = useFrameProcessor(frame => {
+  //   'worklet';
+  //   runOnJS(processFrame)(frame);
+  // }, []);
 
-  useEffect(() => {
-    if (craftModel && yoloModel) {
-      modelRef.current = {
-        craftModel,
-        yoloModel,
-      };
-      console.log('Models loaded');
-    }
-  }, [craftModel, yoloModel]);
-
-  const procesImage = async () => {
-    if (!cameraRef.current) return;
-
-    try {
-      const photo = await cameraRef.current.takePhoto({
-        enableAutoDistortionCorrection: true,
-      });
-
-      console.log(photo.path);
-      const res = await prcoessImage(photo.path);
-      const result = await TextRecognition.recognize('file://' + photo.path);
-
-      console.log(res);
-      await RNFS.unlink(photo.path);
-    } catch (er) {
-      console.error('Unable to process image', er);
-    }
-  };
-
+  // const processFrame = async frame => {
+  //   try {
+  //     const {blocks} = await TextRecognition.recognize(frame);
+  //     const lines = blocks.flatMap(b => b.lines.map(l => l.text));
+  //     console.log('Detected lines:', lines);
+  //   } catch (e) {
+  //     console.warn('Error processing frame: ', e);
+  //   }
+  // };
   return (
     <SafeAreaView style={{flex: 1}}>
-      {device ? (
+      {devices ? (
         <Camera
-          device={device}
+          device={devices}
           isActive={true}
-          photo={true}
           style={{flex: 1}}
-          photoHdr={true}
-          focusable={true}
-          photoQualityBalance="quality"
-          ref={cameraRef}
           // frameProcessor={frameProcessor} // Temporarily disabled
         />
       ) : (
         <Text style={{textAlign: 'center', marginTop: 20}}>
           Camera not available
         </Text>
-      )}
-      {hasPermission && (
-        <Button
-          iconSource={iconStyle => (
-            <FontAwesome
-              name="camera"
-              size={20}
-              color="white"
-              style={iconStyle}
-            />
-          )}
-          iconStyle={tailwind`bg-blue-500 rounded-full p-5`}
-          style={[
-            tailwind`absolute bottom-3`,
-            {left: '55%', transform: [{translateX: -50}]},
-          ]}
-          backgroundColor="blue"
-          onPress={procesImage}
-        />
       )}
     </SafeAreaView>
   );
